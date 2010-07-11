@@ -71,7 +71,7 @@ void *threads_main(void *p)
 {
 	size_t i = 0;
 	path_t *board_path = p;
-	unarray_t *thread_list = getThreadList(board_path);
+	unarray_t *thread_list;
 	unstr_t *filename;
 	unstr_t *data;
 	unstr_t *sure_index;
@@ -85,6 +85,10 @@ void *threads_main(void *p)
 	search_t *map_youtube;
 	search_t *map_nicovideo;
 	search_t *map_2ch;
+
+	pthread_detach(pthread_self());
+
+	thread_list = getThreadList(board_path);
 	if(!thread_list){
 		g_thread_count--;
 		return NULL;
