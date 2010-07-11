@@ -179,6 +179,7 @@ bool search_copy(search_t *s1, search_t *s2, pthread_mutex_t *mutex)
 			thread_concat(m->threads, match->threads);
 		}
 	}
+	printf("%d\n", (int)size);
 
 	pthread_mutex_unlock(mutex);
 	return true;

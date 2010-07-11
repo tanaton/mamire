@@ -30,7 +30,7 @@ search_t *search_new(unstr_t *pattern, unstr_t *name)
 	}
 	search = mamire_malloc(sizeof(search_t));
 	search->reg = reg;
-	search->list = unmap_init(16, 4096, 1024);
+	search->list = unmap_init(16, 1024, 512);
 	search->name = unstr_copy(name);
 	return search;
 }
@@ -101,6 +101,7 @@ void search_free(void *p)
 	onig_free(s->reg);
 	pthread_mutex_unlock(&g_onig_mutex);
 	unmap_free(s->list);
+	unstr_free(s->name);
 	free(s);
 }
 
@@ -123,7 +124,7 @@ void thread_free(void *p)
 
 match_t *match_new(unstr_t *match)
 {
-	match_t *p = mamire_malloc(sizeof(thread_t));
+	match_t *p = mamire_malloc(sizeof(match_t));
 	p->match = unstr_copy(match);
 	p->count = 0;
 	p->threads = unarray_init();
