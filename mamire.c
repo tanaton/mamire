@@ -171,15 +171,16 @@ bool search_copy(search_t *s1, search_t *s2, pthread_mutex_t *mutex)
 		map_data = unmap_get(s1->list, match->match->data, match->match->length);
 		if(map_data->data == NULL){
 			m = match_new(match->match);
+			m->count = match->count;
 			thread_concat(m->threads, match->threads);
 			map_data->data = m;
 			map_data->free_func = match_free;
 		} else {
 			m = map_data->data;
+			m->count += match->count;
 			thread_concat(m->threads, match->threads);
 		}
 	}
-	printf("%d\n", (int)size);
 
 	pthread_mutex_unlock(mutex);
 	return true;

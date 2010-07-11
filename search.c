@@ -19,7 +19,7 @@ search_t *search_new(unstr_t *pattern, unstr_t *name)
 	
 	pthread_mutex_lock(&g_onig_mutex);
 	r = onig_new(&reg, (UChar *)pattern->data, (UChar *)(pattern->data + unstr_strlen(pattern)),
-			ONIG_OPTION_DEFAULT, ONIG_ENCODING_SJIS, ONIG_SYNTAX_DEFAULT, &einfo);
+		ONIG_OPTION_NONE, ONIG_ENCODING_SJIS, ONIG_SYNTAX_PERL, &einfo);
 	pthread_mutex_unlock(&g_onig_mutex);
 
 	if(r != ONIG_NORMAL){
@@ -37,7 +37,7 @@ search_t *search_new(unstr_t *pattern, unstr_t *name)
 
 bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 {
-	OnigRegion *region;
+	OnigRegion *region = onig_region_new();
 	unstr_t *str_match;
 	UChar *start;
 	UChar *end;
@@ -49,13 +49,13 @@ bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 	range = end;
 
 	while(true){
-		region = onig_region_new();
 		ret = onig_search(search->reg, (UChar *)data->data, end, start, range, region, ONIG_OPTION_NONE);
 
 		if(ret >= 0){
 			//printf("%s : match at %d\n", search->name->data, ret);
-			str_match = unstr_substr_char(data->data + region->beg[0], region->end[0]);
+			str_match = unstr_substr_char(data->data + region->beg[0], region->end[0] - region->beg[0]);
 			search_match_text(search, str_match, path, title);
+			//printf("%s\n", str_match->data);
 			unstr_free(str_match);
 			start = (UChar *)(data->data + region->end[0]);
 		} else if(ret == ONIG_MISMATCH){
@@ -67,8 +67,8 @@ bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 			printf("ERROR: %s\n", s);
 			return false;
 		}
-		onig_region_free(region, 1);
-		//onig_region_clear(region);
+		//onig_region_free(region, 1);
+		onig_region_clear(region);
 	}
 	onig_region_free(region, 1);
 	return true;
