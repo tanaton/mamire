@@ -16,9 +16,9 @@
 #define MAMIRE_SEARCH_NAME_NICOVIDEO	"nicovideo"
 #define MAMIRE_SEARCH_NAME_2CH			"2ch"
 
-#define MAMIRE_PATTERN_YOUTUBE		"ttp:\\/\\/(www\\.)youtube\\.(com|jp)\\/watch\\?v=[\\w\\d\\-\\_]{11}"
-#define MAMIRE_PATTERN_NICOVIDEO	"ttp:\\/\\/(www\\.)nicovideo.jp\\/watch/sm[\\d]+"
-#define MAMIRE_PATTERN_2CH			"ttp:\\/\\/(\\w+\\.2ch\\.net|\\w+\\.bbspink\\.com)\\/test\\/read\\.\\w+[\\/|#]\\w+\\/\\d{9,10}"
+#define MAMIRE_PATTERN_YOUTUBE		"youtube\\.(com|jp)\\/watch\\?v=[\\w\\d\\-\\_]{11}"
+#define MAMIRE_PATTERN_NICOVIDEO	"nicovideo.jp\\/watch/sm[\\d]+"
+#define MAMIRE_PATTERN_2CH			"(\\w+\\.2ch\\.net|\\w+\\.bbspink\\.com)\\/test\\/read\\.\\w+[\\/|#]\\w+\\/\\d{9,10}"
 
 void global_init(void);
 void *threads_main(void *p);

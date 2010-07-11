@@ -55,7 +55,7 @@ bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 			//printf("%s : match at %d\n", search->name->data, ret);
 			str_match = unstr_substr_char(data->data + region->beg[0], region->end[0] - region->beg[0]);
 			search_match_text(search, str_match, path, title);
-			//printf("%s\n", str_match->data);
+			printf("%s\n", str_match->data);
 			unstr_free(str_match);
 			start = (UChar *)(data->data + region->end[0]);
 		} else if(ret == ONIG_MISMATCH){
