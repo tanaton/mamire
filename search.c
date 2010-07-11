@@ -66,8 +66,8 @@ bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 			printf("ERROR: %s\n", s);
 			return false;
 		}
-		// onig_region_free(region, 0);
-		onig_region_clear(region);
+		onig_region_free(region, 0);
+		//onig_region_clear(region);
 	}
 	onig_region_free(region, 1);
 	return true;

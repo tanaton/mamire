@@ -93,7 +93,7 @@ void *threads_main(void *p)
 		g_thread_count--;
 		return NULL;
 	}
-	filename = unstr_init_memory(256);
+	filename = unstr_init_memory(64);
 	sure_index = unstr_init_memory(16);
 	pattern_youtube = unstr_init(MAMIRE_PATTERN_YOUTUBE);
 	pattern_nicovideo = unstr_init(MAMIRE_PATTERN_NICOVIDEO);
@@ -207,9 +207,9 @@ unarray_t *getBoardList()
 	path_t *path;
 	unarray_t *arr = unarray_init();
 	unstr_t *line = 0;
-	unstr_t *p1 = unstr_init_memory(64);
-	unstr_t *p2 = unstr_init_memory(64);
-	unstr_t *p3 = unstr_init_memory(256);
+	unstr_t *p1 = unstr_init_memory(16);
+	unstr_t *p2 = unstr_init_memory(16);
+	unstr_t *p3 = unstr_init_memory(16);
 	unstr_t *filename = unstr_init(MAMIRE_ITA_NAME_PATH);
 	unstr_t *data = unstr_file_get_contents(filename);
 	line = unstr_strtok(data, "\n", &index);
@@ -249,9 +249,9 @@ unarray_t *getThreadList(path_t *board)
 		return NULL;
 	}
 	p1 = unstr_init_memory(16);
-	p2 = unstr_init_memory(256);
-	path.saba = unstr_init_memory(32);
-	path.ita = unstr_init_memory(32);
+	p2 = unstr_init_memory(16);
+	path.saba = unstr_init_memory(16);
+	path.ita = unstr_init_memory(16);
 	path.sure = unstr_init_memory(16);
 	list = unarray_init();
 	line = unstr_strtok(data, "\n", &index);
