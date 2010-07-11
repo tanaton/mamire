@@ -37,7 +37,7 @@ search_t *search_new(unstr_t *pattern, unstr_t *name)
 
 bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 {
-	OnigRegion *region = onig_region_new();
+	OnigRegion *region;
 	unstr_t *str_match;
 	UChar *start;
 	UChar *end;
@@ -49,6 +49,7 @@ bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 	range = end;
 
 	while(true){
+		region = onig_region_new();
 		ret = onig_search(search->reg, (UChar *)data->data, end, start, range, region, ONIG_OPTION_NONE);
 
 		if(ret >= 0){
@@ -66,7 +67,7 @@ bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 			printf("ERROR: %s\n", s);
 			return false;
 		}
-		onig_region_free(region, 0);
+		onig_region_free(region, 1);
 		//onig_region_clear(region);
 	}
 	onig_region_free(region, 1);
