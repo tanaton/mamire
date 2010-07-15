@@ -22,7 +22,7 @@
 
 void global_init(void);
 void *threads_main(void *p);
-bool search_copy(search_t *s1, search_t *s2, pthread_mutex_t *mutex);
+bool search_copy(unmap_t *map, search_t *s, pthread_mutex_t *mutex);
 bool thread_concat(unarray_t *a1, unarray_t *a2);
 unarray_t *getBoardList( void );
 unarray_t *getThreadList(path_t *board);
