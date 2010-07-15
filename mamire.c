@@ -7,9 +7,9 @@
 #include "mamire.h"
 #include "search.h"
 
-static search_t *g_map_youtube;
-static search_t *g_map_nicovideo;
-static search_t *g_map_2ch;
+static unmap_t *g_map_youtube;
+static unmap_t *g_map_nicovideo;
+static unmap_t *g_map_2ch;
 static pthread_mutex_t g_mutex_youtube = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t g_mutex_nicovideo = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t g_mutex_2ch = PTHREAD_MUTEX_INITIALIZER;
@@ -39,32 +39,17 @@ int main()
 	}
 
 	unarray_free(ita_list, path_free);
-	search_free(g_map_youtube);
-	search_free(g_map_nicovideo);
-	search_free(g_map_2ch);
+	unmap_free(g_map_youtube, match_free);
+	unmap_free(g_map_nicovideo, match_free);
+	unmap_free(g_map_2ch, match_free);
 	return 0;
 }
 
 void global_init(void)
 {
-	unstr_t *pattern_youtube = unstr_init(MAMIRE_PATTERN_YOUTUBE);
-	unstr_t *pattern_nicovideo = unstr_init(MAMIRE_PATTERN_NICOVIDEO);
-	unstr_t *pattern_2ch = unstr_init(MAMIRE_PATTERN_2CH);
-	unstr_t *name_youtube = unstr_init(MAMIRE_SEARCH_NAME_YOUTUBE);
-	unstr_t *name_nicovideo = unstr_init(MAMIRE_SEARCH_NAME_NICOVIDEO);
-	unstr_t *name_2ch = unstr_init(MAMIRE_SEARCH_NAME_2CH);
-	g_map_youtube = search_new(pattern_youtube, name_youtube);
-	g_map_nicovideo = search_new(pattern_nicovideo, name_nicovideo);
-	g_map_2ch = search_new(pattern_2ch, name_2ch);
-	unstr_delete(
-		4,
-		pattern_youtube,
-		pattern_nicovideo,
-		pattern_2ch,
-		name_youtube,
-		name_nicovideo,
-		name_2ch
-	);
+	g_map_youtube = unmap_init(32, 2048, 512);
+	g_map_nicovideo = unmap_init(32, 2048, 512);
+	g_map_2ch = unmap_init(32, 2048, 512);
 }
 
 void *threads_main(void *p)
@@ -117,9 +102,9 @@ void *threads_main(void *p)
 		);
 		data = unstr_file_get_contents(filename);
 		if(unstr_isset(data)){
-			search_text(map_youtube, data, &(thread->path), thread->title);
-			search_text(map_nicovideo, data, &(thread->path), thread->title);
-			search_text(map_2ch, data, &(thread->path), thread->title);
+			search_text(map_youtube, data);
+			search_text(map_nicovideo, data);
+			search_text(map_2ch, data);
 		}
 		unstr_free(data);
 	}
@@ -150,35 +135,31 @@ void *threads_main(void *p)
 	return NULL;
 }
 
-bool search_copy(search_t *s1, search_t *s2, pthread_mutex_t *mutex)
+bool search_copy(unmap_t *map, search_t *s, pthread_mutex_t *mutex)
 {
 	size_t i = 0;
 	size_t size = 0;
-	unmap_data_t *map_data = 0;
 	match_t *m = 0;
 	match_t *match = 0;
 
 	pthread_mutex_lock(mutex);
 
-	if(!s1 || !s2 || unstr_strcmp(s1->name, s2->name)){
+	if(!map || !s){
 		pthread_mutex_unlock(mutex);
 		return false;
 	}
-	size = unmap_size(s2->list);
+	size = unmap_size(s->list);
 	for(i = 0; i < size; i++){
-		map_data = unmap_at(s2->list, i);
-		match = map_data->data;
-		map_data = unmap_get(s1->list, match->match->data, match->match->length);
-		if(map_data->data == NULL){
-			m = match_new(match->match);
-			m->count = match->count;
-			//thread_concat(m->threads, match->threads);
-			map_data->data = m;
-			map_data->free_func = match_free;
-		} else {
-			m = map_data->data;
-			m->count += match->count;
-			//thread_concat(m->threads, match->threads);
+		match = unmap_at(s->list, i);
+		if(match != NULL){
+			m = unmap_get(map, match->match->data, match->match->length);
+			if(m == NULL){
+				m = match_new(match->match);
+				m->count = match->count;
+				unmap_set(map, match->match->data, match->match->length, m, NULL);
+			} else {
+				m->count += match->count;
+			}
 		}
 	}
 

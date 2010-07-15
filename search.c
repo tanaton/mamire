@@ -35,7 +35,7 @@ search_t *search_new(unstr_t *pattern, unstr_t *name)
 	return search;
 }
 
-bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
+bool search_text(search_t *search, unstr_t *data)
 {
 	OnigRegion *region = onig_region_new();
 	unstr_t *str_match;
@@ -53,7 +53,7 @@ bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 
 		if(ret >= 0){
 			str_match = unstr_substr_char(data->data + region->beg[0], region->end[0] - region->beg[0]);
-			search_match_text(search, str_match, path, title);
+			search_match_text(search, str_match);
 			//printf("%s\n", str_match->data);
 			unstr_free(str_match);
 			start = (UChar *)(data->data + region->end[0]);
@@ -72,23 +72,14 @@ bool search_text(search_t *search, unstr_t *data, path_t *path, unstr_t *title)
 	return true;
 }
 
-bool search_match_text(search_t *search, unstr_t *match, path_t *path, unstr_t *title)
+bool search_match_text(search_t *search, unstr_t *match)
 {
-	match_t *m = 0;
-	unmap_data_t *data = 0;
-	data = unmap_get(search->list, match->data, unstr_strlen(match));
-	if(data == NULL){
-		return false;
-	}
-	if(data->data == NULL){
+	match_t *m = unmap_get(search->list, match->data, unstr_strlen(match));
+	if(m == NULL){
 		m = match_new(match);
-		//unarray_push(m->threads, thread_new(path, title));
-		data->data = m;
-		data->free_func = match_free;
+		unmap_set(search->list, match->data, unstr_strlen(match), m, NULL);
 	} else {
-		m = data->data;
 		m->count++;
-		//unarray_push(m->threads, thread_new(path, title));
 	}
 	return true;
 }
@@ -99,7 +90,7 @@ void search_free(void *p)
 	pthread_mutex_lock(&g_onig_mutex);
 	onig_free(s->reg);
 	pthread_mutex_unlock(&g_onig_mutex);
-	unmap_free(s->list);
+	unmap_free(s->list, match_free);
 	unstr_free(s->name);
 	free(s);
 }
@@ -126,7 +117,6 @@ match_t *match_new(unstr_t *match)
 	match_t *p = mamire_malloc(sizeof(match_t));
 	p->match = unstr_copy(match);
 	p->count = 1;
-	//p->threads = unarray_init(8);
 	return p;
 }
 
@@ -134,7 +124,6 @@ void match_free(void *p)
 {
 	match_t *m = p;
 	unstr_free(m->match);
-	//unarray_free(m->threads, thread_free);
 	free(m);
 }
 
