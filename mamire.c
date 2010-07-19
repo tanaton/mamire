@@ -9,9 +9,11 @@
 
 static unmap_t *g_map_youtube;
 static unmap_t *g_map_nicovideo;
+static unmap_t *g_map_nicovideo_live;
 static unmap_t *g_map_2ch;
 static pthread_mutex_t g_mutex_youtube = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t g_mutex_nicovideo = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_mutex_nicovideo_live = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t g_mutex_2ch = PTHREAD_MUTEX_INITIALIZER;
 
 static int g_thread_count;
@@ -39,8 +41,15 @@ int main()
 	}
 
 	unarray_free(ita_list, path_free);
+
+	write_file(g_map_youtube, MAMIRE_SEARCH_NAME_YOUTUBE);
+	write_file(g_map_nicovideo, MAMIRE_SEARCH_NAME_NICOVIDEO);
+	write_file(g_map_nicovideo_live, MAMIRE_SEARCH_NAME_NICOVIDEO_LIVE);
+	write_file(g_map_2ch, MAMIRE_SEARCH_NAME_2CH);
+
 	unmap_free(g_map_youtube, match_free);
 	unmap_free(g_map_nicovideo, match_free);
+	unmap_free(g_map_nicovideo_live, match_free);
 	unmap_free(g_map_2ch, match_free);
 	return 0;
 }
@@ -49,6 +58,7 @@ void global_init(void)
 {
 	g_map_youtube = unmap_init(32, 2048, 512);
 	g_map_nicovideo = unmap_init(32, 2048, 512);
+	g_map_nicovideo_live = unmap_init(32, 2048, 512);
 	g_map_2ch = unmap_init(32, 2048, 512);
 }
 
@@ -60,15 +70,10 @@ void *threads_main(void *p)
 	unstr_t *filename;
 	unstr_t *data;
 	unstr_t *sure_index;
-	unstr_t *pattern_youtube;
-	unstr_t *pattern_nicovideo;
-	unstr_t *pattern_2ch;
-	unstr_t *name_youtube;
-	unstr_t *name_nicovideo;
-	unstr_t *name_2ch;
 	thread_t *thread;
 	search_t *map_youtube;
 	search_t *map_nicovideo;
+	search_t *map_nicovideo_live;
 	search_t *map_2ch;
 
 	pthread_detach(pthread_self());
@@ -80,15 +85,10 @@ void *threads_main(void *p)
 	}
 	filename = unstr_init_memory(64);
 	sure_index = unstr_init_memory(16);
-	pattern_youtube = unstr_init(MAMIRE_PATTERN_YOUTUBE);
-	pattern_nicovideo = unstr_init(MAMIRE_PATTERN_NICOVIDEO);
-	pattern_2ch = unstr_init(MAMIRE_PATTERN_2CH);
-	name_youtube = unstr_init(MAMIRE_SEARCH_NAME_YOUTUBE);
-	name_nicovideo = unstr_init(MAMIRE_SEARCH_NAME_NICOVIDEO);
-	name_2ch = unstr_init(MAMIRE_SEARCH_NAME_2CH);
-	map_youtube = search_new(pattern_youtube, name_youtube);
-	map_nicovideo = search_new(pattern_nicovideo, name_nicovideo);
-	map_2ch = search_new(pattern_2ch, name_2ch);
+	map_youtube = search_new(MAMIRE_PATTERN_YOUTUBE, MAMIRE_SEARCH_NAME_YOUTUBE);
+	map_nicovideo = search_new(MAMIRE_PATTERN_NICOVIDEO, MAMIRE_SEARCH_NAME_NICOVIDEO);
+	map_nicovideo_live = search_new(MAMIRE_PATTERN_NICOVIDEO_LIVE, MAMIRE_SEARCH_NAME_NICOVIDEO_LIVE);
+	map_2ch = search_new(MAMIRE_PATTERN_2CH, MAMIRE_SEARCH_NAME_2CH);
 	for(i = 0; i < thread_list->length; i++){
 		thread = unarray_at(thread_list, i);
 		unstr_substr(sure_index, thread->path.sure, 4);
@@ -102,35 +102,27 @@ void *threads_main(void *p)
 		);
 		data = unstr_file_get_contents(filename);
 		if(unstr_isset(data)){
-			search_text(map_youtube, data);
-			search_text(map_nicovideo, data);
-			search_text(map_2ch, data);
+			search_text(map_youtube, data, 1);
+			search_text(map_nicovideo, data, 1);
+			search_text(map_nicovideo_live, data, 1);
+			search_text(map_2ch, data, 0);
 		}
 		unstr_free(data);
 	}
 
 	search_copy(g_map_youtube, map_youtube, &g_mutex_youtube);
 	search_copy(g_map_nicovideo, map_nicovideo, &g_mutex_nicovideo);
+	search_copy(g_map_nicovideo_live, map_nicovideo_live, &g_mutex_nicovideo_live);
 	search_copy(g_map_2ch, map_2ch, &g_mutex_2ch);
 
 	search_free(map_youtube);
 	search_free(map_nicovideo);
+	search_free(map_nicovideo_live);
 	search_free(map_2ch);
 
 	unarray_free(thread_list, thread_free);
 
-	unstr_delete(
-		7,
-		filename,
-		data,
-		sure_index,
-		pattern_youtube,
-		pattern_nicovideo,
-		pattern_2ch,
-		name_youtube,
-		name_nicovideo,
-		name_2ch
-	);
+	unstr_delete(3, filename, data, sure_index);
 	g_thread_count--;
 	return NULL;
 }
@@ -165,6 +157,43 @@ bool search_copy(unmap_t *map, search_t *s, pthread_mutex_t *mutex)
 
 	pthread_mutex_unlock(mutex);
 	return true;
+}
+
+void write_file(unmap_t *map, const char *str)
+{
+	unstr_t *tmp = unstr_init_memory(128);
+	unstr_t *txt = unstr_init_memory(4096 * 10);
+	unstr_t *filename = unstr_sprintf(NULL, "/2ch/dat/%s.tsv", str);
+	unarray_t *list = qsort_exec(map);
+	match_t *match = 0;
+	size_t size = unarray_size(list);
+	size_t i = 0;
+	for(i = 0; i < size; i++){
+		match = unarray_at(list, i);
+		unstr_sprintf(tmp, "%$\t%d\n", match->match, match->count);
+		unstr_strcat(txt, tmp);
+	}
+	unstr_file_put_contents(filename, txt, "w");
+	unstr_delete(3, tmp, txt, filename);
+}
+
+unarray_t *qsort_exec(unmap_t *map)
+{
+	size_t i = 0;
+	size_t mapsize = unmap_size(map);
+	unarray_t *array = unarray_init(mapsize + 1);
+	for(i = 0; i < mapsize; i++){
+		unarray_push(array, unmap_at(map, i));
+	}
+	qsort(array->data, unarray_size(array), sizeof(void *), compare_match);
+	return array;
+}
+
+int compare_match(const void *a, const void *b)
+{
+	match_t **aa = a;
+	match_t **bb = b;
+	return (*aa)->count - (*bb)->count;
 }
 
 bool thread_concat(unarray_t *a1, unarray_t *a2)

@@ -23,7 +23,7 @@ typedef struct search_st {
 
 typedef struct match_st {
 	unstr_t			*match;
-	size_t			count;
+	int				count;
 } match_t;
 
 typedef struct thread_st {
@@ -31,8 +31,8 @@ typedef struct thread_st {
 	unstr_t			*title;
 } thread_t;
 
-search_t *search_new(unstr_t *pattern, unstr_t *name);
-bool search_text(search_t *search, unstr_t *data);
+search_t *search_new(const char *pattern, const char *name);
+bool search_text(search_t *search, unstr_t *data, size_t reg_index);
 bool search_match_text(search_t *search, unstr_t *match);
 void search_free(void *p);
 thread_t *thread_new(path_t *path, unstr_t *title);

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <pthread.h>
 #include <oniguruma.h>
 
@@ -10,7 +11,7 @@
 
 static pthread_mutex_t g_onig_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-search_t *search_new(unstr_t *pattern, unstr_t *name)
+search_t *search_new(const char *pattern, const char *name)
 {
 	regex_t *reg;
 	OnigErrorInfo einfo;
@@ -18,7 +19,7 @@ search_t *search_new(unstr_t *pattern, unstr_t *name)
 	int r;
 	
 	pthread_mutex_lock(&g_onig_mutex);
-	r = onig_new(&reg, (UChar *)pattern->data, (UChar *)(pattern->data + unstr_strlen(pattern)),
+	r = onig_new(&reg, (UChar *)pattern, (UChar *)(pattern + strlen(pattern)),
 		ONIG_OPTION_NONE, ONIG_ENCODING_SJIS, ONIG_SYNTAX_PERL, &einfo);
 	pthread_mutex_unlock(&g_onig_mutex);
 
@@ -31,11 +32,11 @@ search_t *search_new(unstr_t *pattern, unstr_t *name)
 	search = mamire_malloc(sizeof(search_t));
 	search->reg = reg;
 	search->list = unmap_init(16, 1024, 512);
-	search->name = unstr_copy(name);
+	search->name = unstr_init(name);
 	return search;
 }
 
-bool search_text(search_t *search, unstr_t *data)
+bool search_text(search_t *search, unstr_t *data, size_t reg_index)
 {
 	OnigRegion *region = onig_region_new();
 	unstr_t *str_match;
@@ -52,7 +53,7 @@ bool search_text(search_t *search, unstr_t *data)
 		ret = onig_search(search->reg, (UChar *)data->data, end, start, range, region, ONIG_OPTION_NONE);
 
 		if(ret >= 0){
-			str_match = unstr_substr_char(data->data + region->beg[0], region->end[0] - region->beg[0]);
+			str_match = unstr_substr_char(data->data + region->beg[reg_index], region->end[reg_index] - region->beg[reg_index]);
 			search_match_text(search, str_match);
 			//printf("%s\n", str_match->data);
 			unstr_free(str_match);
