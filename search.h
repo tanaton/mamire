@@ -33,6 +33,7 @@ typedef struct thread_st {
 
 search_t *search_new(const char *pattern, const char *name);
 bool search_text(search_t *search, unstr_t *data, size_t reg_index);
+bool search_text_2ch(search_t *search, unstr_t *data);
 bool search_match_text(search_t *search, unstr_t *match);
 void search_free(void *p);
 thread_t *thread_new(path_t *path, unstr_t *title);

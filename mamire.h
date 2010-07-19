@@ -20,7 +20,7 @@
 #define MAMIRE_PATTERN_YOUTUBE				"youtube\\.com/watch\\?v=([\\w\\d\\-_]{11})"
 #define MAMIRE_PATTERN_NICOVIDEO			"nicovideo\\.jp/watch/(sm[\\d]+)"
 #define MAMIRE_PATTERN_NICOVIDEO_LIVE		"nicovideo\\.jp/watch/(lv[\\d]+)"
-#define MAMIRE_PATTERN_2CH					"ttp://\\w+\\.(2ch\\.net|bbspink\\.com)/test/read\\.(cgi/|html#)\\w+/\\d{9,10}"
+#define MAMIRE_PATTERN_2CH					"ttp://(\\w+)\\.(2ch\\.net|bbspink\\.com)/test/read\\.(cgi/|html#)(\\w+)/(\\d{9,10})"
 
 void global_init(void);
 void *threads_main(void *p);

@@ -105,7 +105,7 @@ void *threads_main(void *p)
 			search_text(map_youtube, data, 1);
 			search_text(map_nicovideo, data, 1);
 			search_text(map_nicovideo_live, data, 1);
-			search_text(map_2ch, data, 0);
+			search_text_2ch(map_2ch, data);
 		}
 		unstr_free(data);
 	}
@@ -168,6 +168,9 @@ void write_file(unmap_t *map, const char *str)
 	match_t *match = 0;
 	size_t size = unarray_size(list);
 	size_t i = 0;
+	//if(size > 100){
+	//	size = 100;
+	//}
 	for(i = 0; i < size; i++){
 		match = unarray_at(list, i);
 		unstr_sprintf(tmp, "%$\t%d\n", match->match, match->count);
@@ -193,7 +196,7 @@ int compare_match(const void *a, const void *b)
 {
 	match_t **aa = a;
 	match_t **bb = b;
-	return (*aa)->count - (*bb)->count;
+	return (*bb)->count - (*aa)->count;
 }
 
 bool thread_concat(unarray_t *a1, unarray_t *a2)
