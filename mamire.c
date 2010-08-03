@@ -24,20 +24,20 @@ int main()
 	size_t i = 0;
 	pthread_t pt;
 	path_t *path = 0;
-	unarray_t *ita_list = getBoardList();
+	unarray_t *ita_list = get_board_list();
 	global_init();
 	g_thread_count = 0;
 	size = ita_list->length;
 	for(i = 0; i < size; i++){
-		while(g_thread_count >= 4){
-			usleep(1000 * 10);
+		while(g_thread_count >= MAMIRE_ACTIVE_THREAD_MAX){
+			usleep(MAMIRE_THREAD_WAIT_USEC);
 		}
 		path = unarray_at(ita_list, i);
 		pthread_create(&pt, NULL, threads_main, path);
 		g_thread_count++;
 	}
 	while(g_thread_count){
-		usleep(1000 * 10);
+		usleep(MAMIRE_THREAD_WAIT_USEC);
 	}
 
 	unarray_free(ita_list, path_free);
@@ -78,7 +78,7 @@ void *threads_main(void *p)
 
 	pthread_detach(pthread_self());
 
-	thread_list = getThreadList(board_path);
+	thread_list = get_thread_list(board_path);
 	if(!thread_list){
 		g_thread_count--;
 		return NULL;
@@ -168,9 +168,9 @@ void write_file(unmap_t *map, const char *str)
 	match_t *match = 0;
 	size_t size = unarray_size(list);
 	size_t i = 0;
-	//if(size > 100){
-	//	size = 100;
-	//}
+	if(size > MAMIRE_WRITE_LINE_MAX){
+		size = MAMIRE_WRITE_LINE_MAX;
+	}
 	for(i = 0; i < size; i++){
 		match = unarray_at(list, i);
 		unstr_sprintf(tmp, "%$\t%d\n", match->match, match->count);
@@ -194,8 +194,8 @@ unarray_t *qsort_exec(unmap_t *map)
 
 int compare_match(const void *a, const void *b)
 {
-	match_t **aa = a;
-	match_t **bb = b;
+	match_t **aa = (match_t **)a;
+	match_t **bb = (match_t **)b;
 	return (*bb)->count - (*aa)->count;
 }
 
@@ -215,11 +215,33 @@ bool thread_concat(unarray_t *a1, unarray_t *a2)
 	return true;
 }
 
-unarray_t *getBoardList()
+unmap_t *get_board_data()
+{
+	size_t index = 0;
+	size_t length = 0;
+	unmap_t *map = unmap_init(16, 32, 32);
+	unstr_t *line = 0;
+	unstr_t *filename = unstr_init(MAMIRE_GET_BOARD_PATH);
+	unstr_t *data = unstr_file_get_contents(filename);
+	line = unstr_strtok(data, "\n", &index);
+	while(line != NULL){
+		length = unstr_strlen(line);
+		if(length != 0){
+			unmap_set(map, line->data, length, unstr_copy(line), (void (*)(void *))unstr_free_func);
+		}
+		unstr_free(line);
+		line = unstr_strtok(data, "\n", &index);
+	}
+	unstr_delete(3, line, data, filename);
+	return map;
+}
+
+unarray_t *get_board_list()
 {
 	size_t index = 0;
 	path_t *path;
 	unarray_t *arr = unarray_init(1024);
+	unmap_t *map = get_board_data();
 	unstr_t *line = 0;
 	unstr_t *p1 = unstr_init_memory(16);
 	unstr_t *p2 = unstr_init_memory(16);
@@ -229,20 +251,23 @@ unarray_t *getBoardList()
 	line = unstr_strtok(data, "\n", &index);
 	while(line != NULL){
 		if(unstr_sscanf(line, "$/$<>$", p1, p2, p3) == 3){
-			path = mamire_malloc(sizeof(path_t));
-			path->saba = unstr_copy(p1);
-			path->ita = unstr_copy(p2);
-			unarray_push(arr, path);
-			printf("%s/%s\n", p1->data, p2->data);
+			if(unmap_get(map, p2->data, unstr_strlen(p2)) != NULL){
+				path = mamire_malloc(sizeof(path_t));
+				path->saba = unstr_copy(p1);
+				path->ita = unstr_copy(p2);
+				unarray_push(arr, path);
+				printf("%s/%s\n", p1->data, p2->data);
+			}
 		}
 		unstr_free(line);
 		line = unstr_strtok(data, "\n", &index);
 	}
 	unstr_delete(6, line, data, filename, p1, p2, p3);
+	unmap_free(map, (void (*)(void *))unstr_free_func);
 	return arr;
 }
 
-unarray_t *getThreadList(path_t *board)
+unarray_t *get_thread_list(path_t *board)
 {
 	size_t index = 0;
 	path_t path;
