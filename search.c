@@ -125,7 +125,7 @@ bool search_match_text(search_t *search, unstr_t *match)
 	match_t *m = unmap_get(search->list, match->data, unstr_strlen(match));
 	if(m == NULL){
 		m = match_new(match);
-		unmap_set(search->list, match->data, unstr_strlen(match), m, NULL);
+		unmap_set(search->list, match->data, unstr_strlen(match), m);
 	} else {
 		m->count++;
 	}

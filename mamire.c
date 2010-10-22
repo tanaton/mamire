@@ -148,7 +148,7 @@ bool search_copy(unmap_t *map, search_t *s, pthread_mutex_t *mutex)
 			if(m == NULL){
 				m = match_new(match->match);
 				m->count = match->count;
-				unmap_set(map, match->match->data, match->match->length, m, NULL);
+				unmap_set(map, match->match->data, match->match->length, m);
 			} else {
 				m->count += match->count;
 			}
@@ -227,7 +227,8 @@ unmap_t *get_board_data()
 	while(line != NULL){
 		length = unstr_strlen(line);
 		if(length != 0){
-			unmap_set(map, line->data, length, unstr_copy(line), (void (*)(void *))unstr_free_func);
+			unstr_free_func(unmap_get(map, line->data, length));
+			unmap_set(map, line->data, length, unstr_copy(line));
 		}
 		unstr_free(line);
 		line = unstr_strtok(data, "\n", &index);
