@@ -2,10 +2,10 @@ PROGRAM = mamire
 CC = gcc
 LINKER = gcc
 CFLAGS = -O2 -Wall
-X = -lonig -lpthread -ltcmalloc
+X = -lonig -lpthread -lunmap -lunstring
 RM = rm -rf
 
-SRCS = mamire.c search.c unstring.c unarray.c crc32.c unmap.c
+SRCS = mamire.c search.c unarray.c
 OBJS = $(SRCS:.c=.o)
 
 $(PROGRAM): $(OBJS)

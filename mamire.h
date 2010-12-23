@@ -6,7 +6,7 @@
 
 #include "unstring.h"
 #include "unarray.h"
-#include "unmap.h"
+#include <unmap.h>
 #include "search.h"
 
 #define MAMIRE_ITA_NAME_PATH				"/2ch/dat/ita.data"

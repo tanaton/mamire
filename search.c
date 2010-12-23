@@ -6,7 +6,7 @@
 #include "search.h"
 #include "mamire.h"
 #include "unstring.h"
-#include "unmap.h"
+#include <unmap.h>
 #include "unarray.h"
 
 static pthread_mutex_t g_onig_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -31,7 +31,7 @@ search_t *search_new(const char *pattern, const char *name)
 	}
 	search = mamire_malloc(sizeof(search_t));
 	search->reg = reg;
-	search->list = unmap_init(16, 1024, 512);
+	search->list = unmap_init(16);
 	search->name = unstr_init(name);
 	return search;
 }

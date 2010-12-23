@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <unmap.h>
 
 #include "mamire.h"
 #include "search.h"
@@ -56,10 +57,10 @@ int main()
 
 void global_init(void)
 {
-	g_map_youtube = unmap_init(32, 2048, 512);
-	g_map_nicovideo = unmap_init(32, 2048, 512);
-	g_map_nicovideo_live = unmap_init(32, 2048, 512);
-	g_map_2ch = unmap_init(32, 2048, 512);
+	g_map_youtube = unmap_init(32);
+	g_map_nicovideo = unmap_init(32);
+	g_map_nicovideo_live = unmap_init(32);
+	g_map_2ch = unmap_init(32);
 }
 
 void *threads_main(void *p)
@@ -219,7 +220,7 @@ unmap_t *get_board_data()
 {
 	size_t index = 0;
 	size_t length = 0;
-	unmap_t *map = unmap_init(16, 32, 32);
+	unmap_t *map = unmap_init(16);
 	unstr_t *line = 0;
 	unstr_t *filename = unstr_init(MAMIRE_GET_BOARD_PATH);
 	unstr_t *data = unstr_file_get_contents(filename);
