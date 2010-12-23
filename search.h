@@ -10,7 +10,6 @@
 #include <unmap.h>
 
 typedef struct path_st {
-	unstr_t	*saba;
 	unstr_t	*ita;
 	unstr_t	*sure;
 } path_t;

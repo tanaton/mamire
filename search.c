@@ -146,7 +146,6 @@ void search_free(void *p)
 thread_t *thread_new(path_t *path, unstr_t *title)
 {
 	thread_t *p = mamire_malloc(sizeof(thread_t));
-	p->path.saba = unstr_copy(path->saba);
 	p->path.ita = unstr_copy(path->ita);
 	p->path.sure = unstr_copy(path->sure);
 	p->title = unstr_copy(title);
@@ -156,7 +155,7 @@ thread_t *thread_new(path_t *path, unstr_t *title)
 void thread_free(void *p)
 {
 	thread_t *t = p;
-	unstr_delete(4, t->path.saba, t->path.ita, t->path.sure, t->title);
+	unstr_delete(3, t->path.ita, t->path.sure, t->title);
 	free(t);
 }
 

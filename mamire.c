@@ -95,8 +95,7 @@ void *threads_main(void *p)
 		unstr_substr(sure_index, thread->path.sure, 4);
 		unstr_sprintf(
 			filename,
-			MAMIRE_ROOT_PATH "/%$/%$/%$/%$.dat",
-			thread->path.saba,
+			MAMIRE_ROOT_PATH "/%$/%$/%$.dat",
 			thread->path.ita,
 			sure_index,
 			thread->path.sure
@@ -253,13 +252,12 @@ unarray_t *get_board_list()
 	line = unstr_strtok(data, "\n", &index);
 	while(line != NULL){
 		if(unstr_sscanf(line, "$/$<>$", p1, p2, p3) == 3){
-			if(unmap_get(map, p2->data, unstr_strlen(p2)) != NULL){
+//			if(unmap_find(map, p2->data, unstr_strlen(p2)) != NULL){
 				path = mamire_malloc(sizeof(path_t));
-				path->saba = unstr_copy(p1);
 				path->ita = unstr_copy(p2);
 				unarray_push(arr, path);
-				printf("%s/%s\n", p1->data, p2->data);
-			}
+				printf("%s\n", p2->data);
+//			}
 		}
 		unstr_free(line);
 		line = unstr_strtok(data, "\n", &index);
@@ -280,10 +278,10 @@ unarray_t *get_thread_list(path_t *board)
 	unstr_t *line = 0;
 	unstr_t *p1;
 	unstr_t *p2;
-	if(	board == NULL || unstr_empty(board->saba) || unstr_empty(board->ita)){
+	if(	board == NULL || unstr_empty(board->ita)){
 		return NULL;
 	}
-	filename = unstr_sprintf(NULL, MAMIRE_ROOT_PATH "/%$/%$/subject.txt", board->saba, board->ita);
+	filename = unstr_sprintf(NULL, MAMIRE_ROOT_PATH "/%$/subject.txt", board->ita);
 	printf("%s\n", filename->data);
 	data = unstr_file_get_contents(filename);
 	if(unstr_empty(data)){
@@ -291,31 +289,28 @@ unarray_t *get_thread_list(path_t *board)
 	}
 	p1 = unstr_init_memory(16);
 	p2 = unstr_init_memory(16);
-	path.saba = unstr_init_memory(16);
 	path.ita = unstr_init_memory(16);
 	path.sure = unstr_init_memory(16);
 	list = unarray_init(512);
 	line = unstr_strtok(data, "\n", &index);
 	while(line != NULL){
 		if(unstr_sscanf(line, "$.dat<>$", p1, p2) == 2){
-			unstr_strcpy(path.saba, board->saba);
 			unstr_strcpy(path.ita, board->ita);
 			unstr_strcpy(path.sure, p1);
 			thread = thread_new(&path, p2);
 			unarray_push(list, thread);
-			// printf("%s.dat<>%s\n", p1->data, p2->data);
 		}
 		unstr_free(line);
 		line = unstr_strtok(data, "\n", &index);
 	}
-	unstr_delete(8, filename, data, line, p1, p2, path.saba, path.ita, path.sure);
+	unstr_delete(7, filename, data, line, p1, p2, path.ita, path.sure);
 	return list;
 }
 
 void path_free(void *p)
 {
 	path_t *path = p;
-	unstr_delete(3, path->saba, path->ita, path->sure);
+	unstr_delete(2, path->ita, path->sure);
 	free(path);
 }
 
